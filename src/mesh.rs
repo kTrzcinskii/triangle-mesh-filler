@@ -1,8 +1,9 @@
-use nalgebra::{Matrix3, Vector3};
+use nalgebra::Vector3;
 
 use crate::{
     control_points::ControlPoints,
     point::{PData, Point},
+    rotations::Rotations,
     triangle::{PosIn2DArr, Triangle},
     triangle_mesh_filler::ControlsState,
 };
@@ -35,8 +36,8 @@ impl Mesh {
         control_points: &ControlPoints,
         controls_state: &ControlsState,
     ) -> Points2DArr {
-        let x_rotation = Self::create_x_rotation_matrix(controls_state.beta());
-        let z_rotation = Self::create_z_rotation_matrix(controls_state.alfa());
+        let x_rotation = Rotations::create_x_rotation_matrix(controls_state.beta());
+        let z_rotation = Rotations::create_z_rotation_matrix(controls_state.alfa());
         let rotation = x_rotation * z_rotation;
         let points_count = controls_state.triangulation_accuracy();
         let mut points = Points2DArr::new(points_count, points_count);
@@ -50,24 +51,6 @@ impl Mesh {
             }
         }
         points
-    }
-
-    fn create_x_rotation_matrix(beta: f32) -> Matrix3<f32> {
-        let beta = beta.to_radians();
-        let sin_beta = beta.sin();
-        let cos_beta = beta.cos();
-        Matrix3::<f32>::new(
-            1.0, 0.0, 0.0, 0.0, cos_beta, -sin_beta, 0.0, sin_beta, cos_beta,
-        )
-    }
-
-    fn create_z_rotation_matrix(alfa: f32) -> Matrix3<f32> {
-        let alfa = alfa.to_radians();
-        let sin_alfa = alfa.sin();
-        let cos_alfa = alfa.cos();
-        Matrix3::<f32>::new(
-            cos_alfa, -sin_alfa, 0.0, sin_alfa, cos_alfa, 0.0, 0.0, 0.0, 1.0,
-        )
     }
 
     fn generate_point(u: f32, v: f32, control_points: &ControlPoints) -> Point {

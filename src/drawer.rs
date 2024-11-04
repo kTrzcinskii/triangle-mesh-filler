@@ -2,8 +2,11 @@ use egui::{Color32, Pos2};
 use nalgebra::Vector3;
 
 use crate::{
+    control_points::{ControlPoints, CONTROL_POINT_COLS, CONTROL_POINT_ROWS},
     mesh::{Mesh, Points2DArr},
+    rotations::Rotations,
     triangle::Triangle,
+    triangle_mesh_filler::ControlsState,
 };
 
 pub struct Drawer;
@@ -13,6 +16,34 @@ impl Drawer {
         let x = screen_center.x + point.x;
         let y = screen_center.y - point.y;
         Pos2 { x, y }
+    }
+
+    // We don't apply rotations to them, so we need to rotate them while drawing
+    pub fn draw_control_points(
+        painter: &egui::Painter,
+        screen_center: &Pos2,
+        control_points: &ControlPoints,
+        controls_state: &ControlsState,
+    ) {
+        const WIDTH: f32 = 3.0;
+        let x_rotation = Rotations::create_x_rotation_matrix(controls_state.beta());
+        let z_rotation = Rotations::create_z_rotation_matrix(controls_state.alfa());
+        let rotation = z_rotation * x_rotation;
+        for i in 0..CONTROL_POINT_ROWS {
+            for j in 0..CONTROL_POINT_COLS {
+                let control_point = rotation * control_points.at(i, j);
+                let position = Self::point_to_screen(&control_point, screen_center);
+                painter.circle(
+                    position,
+                    WIDTH,
+                    Color32::BLACK,
+                    egui::Stroke {
+                        color: Color32::BLACK,
+                        width: WIDTH,
+                    },
+                );
+            }
+        }
     }
 
     pub fn draw_mesh(painter: &egui::Painter, screen_center: &Pos2, mesh: &Mesh) {

@@ -54,6 +54,12 @@ impl eframe::App for TriangleMeshFiller {
         egui::CentralPanel::default().show(ctx, |ui| {
             let painter = ui.painter();
             let screen_center = ui.available_rect_before_wrap().center();
+            Drawer::draw_control_points(
+                painter,
+                &screen_center,
+                &self.control_points,
+                &self.controls_state,
+            );
             Drawer::draw_mesh(painter, &screen_center, &self.mesh);
         });
     }
