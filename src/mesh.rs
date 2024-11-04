@@ -1,9 +1,10 @@
-use nalgebra::Vector3;
+use nalgebra::{Matrix3, Vector3};
 
 use crate::{
     control_points::ControlPoints,
     point::{PData, Point},
     triangle::{PosIn2DArr, Triangle},
+    triangle_mesh_filler::ControlsState,
 };
 
 pub struct Mesh {
@@ -16,8 +17,8 @@ const N: usize = 3;
 const BINOMIAL: [f32; 4] = [1.0, 3.0, 3.0, 1.0];
 
 impl Mesh {
-    pub fn triangulation(control_points: &ControlPoints, points_count: usize) -> Self {
-        let points = Self::generate_points(control_points, points_count);
+    pub fn triangulation(control_points: &ControlPoints, controls_state: &ControlsState) -> Self {
+        let points = Self::generate_points(control_points, controls_state);
         let triangles = Self::generate_triangles(&points);
         Self { triangles, points }
     }
@@ -30,17 +31,43 @@ impl Mesh {
         &self.points
     }
 
-    fn generate_points(control_points: &ControlPoints, points_count: usize) -> Points2DArr {
+    fn generate_points(
+        control_points: &ControlPoints,
+        controls_state: &ControlsState,
+    ) -> Points2DArr {
+        let x_rotation = Self::create_x_rotation_matrix(controls_state.beta());
+        let z_rotation = Self::create_z_rotation_matrix(controls_state.alfa());
+        let rotation = x_rotation * z_rotation;
+        let points_count = controls_state.triangulation_accuracy();
         let mut points = Points2DArr::new(points_count, points_count);
         for i in 0..points_count {
             let u = i as f32 / (points_count - 1) as f32;
             for j in 0..points_count {
                 let v = j as f32 / (points_count - 1) as f32;
-                let point = Self::generate_point(u, v, control_points);
+                let mut point = Self::generate_point(u, v, control_points);
+                point.apply_rotation(&rotation);
                 points.set_at(i, j, point);
             }
         }
         points
+    }
+
+    fn create_x_rotation_matrix(beta: f32) -> Matrix3<f32> {
+        let beta = beta.to_radians();
+        let sin_beta = beta.sin();
+        let cos_beta = beta.cos();
+        Matrix3::<f32>::new(
+            1.0, 0.0, 0.0, 0.0, cos_beta, -sin_beta, 0.0, sin_beta, cos_beta,
+        )
+    }
+
+    fn create_z_rotation_matrix(alfa: f32) -> Matrix3<f32> {
+        let alfa = alfa.to_radians();
+        let sin_alfa = alfa.sin();
+        let cos_alfa = alfa.cos();
+        Matrix3::<f32>::new(
+            cos_alfa, -sin_alfa, 0.0, sin_alfa, cos_alfa, 0.0, 0.0, 0.0, 1.0,
+        )
     }
 
     fn generate_point(u: f32, v: f32, control_points: &ControlPoints) -> Point {

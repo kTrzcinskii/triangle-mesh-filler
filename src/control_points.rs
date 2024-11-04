@@ -8,7 +8,7 @@ use anyhow::{Context, Error, Result};
 use nalgebra::Vector3;
 
 const CONTROL_POINTS_COUNT: usize = 16;
-pub const CONTROL_POINT_ROWS: usize = 4;
+pub const _CONTROL_POINT_ROWS: usize = 4;
 pub const CONTROL_POINT_COLS: usize = 4;
 
 pub struct ControlPoints {
