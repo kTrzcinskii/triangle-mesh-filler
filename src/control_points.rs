@@ -8,6 +8,8 @@ use anyhow::{Context, Error, Result};
 use nalgebra::Vector3;
 
 const CONTROL_POINTS_COUNT: usize = 16;
+pub const CONTROL_POINT_ROWS: usize = 4;
+pub const CONTROL_POINT_COLS: usize = 4;
 
 pub struct ControlPoints {
     points: [Vector3<f32>; CONTROL_POINTS_COUNT],
@@ -42,5 +44,9 @@ impl ControlPoints {
             .try_into()
             .map_err(|_| Error::msg("Cannot parse vec to array"))?;
         Ok(Self { points })
+    }
+
+    pub fn at(&self, row: usize, col: usize) -> Vector3<f32> {
+        self.points[row * CONTROL_POINT_COLS + col]
     }
 }
