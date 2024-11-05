@@ -11,7 +11,10 @@ mod triangle_mesh_filler;
 
 fn main() -> Result<()> {
     let app = TriangleMeshFiller::load_from_file("config/default_config.txt")?;
-    let native_options = eframe::NativeOptions::default();
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_maximized(true),
+        ..Default::default()
+    };
     eframe::run_native(
         "Triangle Mesh Filler",
         native_options,
