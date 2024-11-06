@@ -4,18 +4,24 @@ use nalgebra::{Matrix3, Vector3};
 pub struct Point {
     before_rotation: PData,
     after_rotation: PData,
+    u: f32,
+    v: f32,
 }
 
 impl Point {
     pub const ZERO: Self = Self {
         before_rotation: PData::ZERO,
         after_rotation: PData::ZERO,
+        u: 0.0,
+        v: 0.0,
     };
 
-    pub fn new(before_rotation: PData, after_rotation: PData) -> Self {
+    pub fn new(before_rotation: PData, after_rotation: PData, u: f32, v: f32) -> Self {
         Self {
             before_rotation,
             after_rotation,
+            u,
+            v,
         }
     }
 
@@ -25,6 +31,14 @@ impl Point {
 
     pub fn after_rotation(&self) -> &PData {
         &self.after_rotation
+    }
+
+    pub fn u(&self) -> f32 {
+        self.u
+    }
+
+    pub fn v(&self) -> f32 {
+        self.v
     }
 
     pub fn apply_rotation(&mut self, rotation: &Matrix3<f32>) {
@@ -62,5 +76,17 @@ impl PData {
 
     pub fn p(&self) -> Vector3<f32> {
         self.p
+    }
+
+    pub fn pu(&self) -> Vector3<f32> {
+        self.pu
+    }
+
+    pub fn pv(&self) -> Vector3<f32> {
+        self.pv
+    }
+
+    pub fn n(&self) -> Vector3<f32> {
+        self.n
     }
 }

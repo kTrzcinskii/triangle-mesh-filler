@@ -63,7 +63,7 @@ impl Mesh {
         let zero = Vector3::<f32>::new(0.0, 0.0, 0.0);
         let before_rotation = PData::new(p, zero, zero, zero);
         let after_rotation = PData::ZERO;
-        Point::new(before_rotation, after_rotation)
+        Point::new(before_rotation, after_rotation, u, v)
     }
 
     #[allow(non_snake_case)]
