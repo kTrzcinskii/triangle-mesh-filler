@@ -18,4 +18,8 @@ impl LightSource {
     pub fn color(&self) -> Color32 {
         self.color
     }
+
+    pub fn color_mut(&mut self) -> &mut Color32 {
+        &mut self.color
+    }
 }

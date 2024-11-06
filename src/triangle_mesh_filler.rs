@@ -80,6 +80,9 @@ impl TriangleMeshFiller {
                     ui.horizontal(|ui| {
                         ui.label("Shape color");
                         ui.color_edit_button_srgba(&mut self.controls_state.shape_color);
+                        ui.add_space(SPACING_X);
+                        ui.label("Light color");
+                        ui.color_edit_button_srgba(self.light_source.color_mut());
                     });
                 });
             });
