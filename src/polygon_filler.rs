@@ -5,23 +5,17 @@ use crate::{
     mesh::{Points2DArr, PosIn2DArr},
 };
 
-pub struct PolygonFiller<'p, 'ep> {
+pub struct PolygonFiller<'p, 'd, 'ep> {
     all_points: &'p Points2DArr,
-    painter: &'ep egui::Painter,
-    screen_center: egui::Pos2,
+    drawer: &'d Drawer<'ep>,
     aet: AET,
 }
 
-impl<'p, 'ep> PolygonFiller<'p, 'ep> {
-    pub fn new(
-        all_points: &'p Points2DArr,
-        painter: &'ep egui::Painter,
-        screen_center: egui::Pos2,
-    ) -> Self {
+impl<'p, 'd, 'ep> PolygonFiller<'p, 'd, 'ep> {
+    pub fn new(all_points: &'p Points2DArr, drawer: &'d Drawer<'ep>) -> Self {
         Self {
             all_points,
-            painter,
-            screen_center,
+            drawer,
             aet: AET::new(),
         }
     }
@@ -68,7 +62,7 @@ impl<'p, 'ep> PolygonFiller<'p, 'ep> {
                 self.check_point(p_index, p, next_index, next_p);
             }
             self.aet.sort_by_x();
-            self.aet.fill_line(self.painter, self.screen_center, y);
+            self.aet.fill_line(self.drawer, y);
             self.aet.update_x();
             y += 1;
         }
@@ -172,14 +166,14 @@ impl AET {
         });
     }
 
-    fn fill_line(&mut self, painter: &egui::Painter, screen_center: egui::Pos2, y: i32) {
+    fn fill_line(&mut self, drawer: &Drawer<'_>, y: i32) {
         for same_y in self.same_y.iter() {
             for x in (same_y.x_start as i32)..(same_y.x_end as i32 + 1) {
                 let pos = egui::Pos2 {
                     x: x as f32,
                     y: y as f32,
                 };
-                Drawer::paint_pixel(painter, &screen_center, pos, egui::Color32::YELLOW);
+                drawer.paint_pixel(pos, egui::Color32::YELLOW);
             }
         }
         self.same_y.clear();
@@ -195,7 +189,7 @@ impl AET {
                     x: x as f32,
                     y: y as f32,
                 };
-                Drawer::paint_pixel(painter, &screen_center, pos, egui::Color32::YELLOW);
+                drawer.paint_pixel(pos, egui::Color32::YELLOW);
             }
         }
     }

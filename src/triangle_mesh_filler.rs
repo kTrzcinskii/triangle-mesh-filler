@@ -20,7 +20,7 @@ impl TriangleMeshFiller {
         Ok(Self {
             control_points,
             mesh,
-            controls_state: ControlsState::default(),
+            controls_state,
         })
     }
 
@@ -28,12 +28,8 @@ impl TriangleMeshFiller {
         let new_mesh = Mesh::triangulation(&self.control_points, &self.controls_state);
         self.mesh = new_mesh;
     }
-}
 
-impl eframe::App for TriangleMeshFiller {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.recalculate_mesh();
-
+    fn show_controls(&mut self, ctx: &egui::Context) {
         egui::SidePanel::right("ControlsPanle")
             .resizable(false)
             .show(ctx, |ui| {
@@ -52,22 +48,28 @@ impl eframe::App for TriangleMeshFiller {
                     );
                 });
             });
+    }
 
+    fn show_central_panel(&self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
             let painter = ui.painter();
             let screen_center = ui.available_rect_before_wrap().center();
-            let mut pf = PolygonFiller::new(self.mesh.points(), painter, screen_center);
+            let drawer = Drawer::new(screen_center, painter);
+            let mut pf = PolygonFiller::new(self.mesh.points(), &drawer);
             for triangle in self.mesh.triangles() {
                 pf.fill_polygon(triangle.vertices());
             }
-            Drawer::draw_control_points(
-                painter,
-                &screen_center,
-                &self.control_points,
-                &self.controls_state,
-            );
-            Drawer::draw_mesh(painter, &screen_center, &self.mesh);
+            drawer.draw_control_points(&self.control_points, &self.controls_state);
+            drawer.draw_mesh(&self.mesh);
         });
+    }
+}
+
+impl eframe::App for TriangleMeshFiller {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.recalculate_mesh();
+        self.show_controls(ctx);
+        self.show_central_panel(ctx);
     }
 }
 
