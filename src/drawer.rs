@@ -3,7 +3,8 @@ use nalgebra::Vector3;
 
 use crate::{
     control_points::{ControlPoints, CONTROL_POINT_COLS, CONTROL_POINT_ROWS},
-    mesh::{Mesh, Points2DArr},
+    mesh::Mesh,
+    point::Points2DArr,
     rotations::Rotations,
     triangle::Triangle,
     triangle_mesh_filler::ControlsState,

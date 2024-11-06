@@ -1,4 +1,4 @@
-use crate::mesh::PosIn2DArr;
+use crate::point::PosIn2DArr;
 
 pub struct Triangle {
     /// Array of indexes inside list of point in `Mesh`

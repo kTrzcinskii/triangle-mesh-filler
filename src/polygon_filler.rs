@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 
 use crate::{
     drawer::Drawer,
-    mesh::{Points2DArr, PosIn2DArr},
+    point::{Points2DArr, PosIn2DArr},
 };
 
 pub struct PolygonFiller<'p, 'd, 'ep> {
