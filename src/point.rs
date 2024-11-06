@@ -1,3 +1,5 @@
+use std::ops::{Add, AddAssign, Mul};
+
 use nalgebra::{Matrix3, Vector3};
 
 use crate::control_points::ControlPoints;
@@ -98,6 +100,7 @@ impl Point {
         let pv: Vector3<f32> = rotation * self.before_rotation().pv;
         let n: Vector3<f32> = rotation * self.before_rotation().n;
         self.after_rotation = PData::new(p, pu, pv, n);
+        self.after_rotation.normalize_all();
     }
 }
 
@@ -139,6 +142,47 @@ impl PData {
 
     pub fn n(&self) -> Vector3<f32> {
         self.n
+    }
+
+    pub fn normalize_all(&mut self) {
+        self.pu = self.pu.normalize();
+        self.pv = self.pv.normalize();
+        self.n = self.n.normalize();
+    }
+}
+
+impl Add<PData> for PData {
+    type Output = PData;
+
+    fn add(self, rhs: PData) -> Self::Output {
+        PData {
+            p: self.p + rhs.p,
+            pu: self.pu + rhs.pu,
+            pv: self.pv + rhs.pv,
+            n: self.n + rhs.n,
+        }
+    }
+}
+
+impl AddAssign<PData> for PData {
+    fn add_assign(&mut self, rhs: PData) {
+        self.p += rhs.p;
+        self.pu += rhs.pu;
+        self.pv += rhs.pv;
+        self.n += rhs.n;
+    }
+}
+
+impl Mul<f32> for PData {
+    type Output = PData;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        PData {
+            p: self.p * rhs,
+            pu: self.pu * rhs,
+            pv: self.pv * rhs,
+            n: self.n * rhs,
+        }
     }
 }
 

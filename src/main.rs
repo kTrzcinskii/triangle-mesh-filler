@@ -3,6 +3,7 @@ use triangle_mesh_filler::TriangleMeshFiller;
 
 mod control_points;
 mod drawer;
+mod light_source;
 mod mesh;
 mod point;
 mod polygon_filler;

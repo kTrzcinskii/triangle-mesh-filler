@@ -1,15 +1,18 @@
 use std::path::Path;
 
 use anyhow::Result;
+use nalgebra::Vector3;
 
 use crate::{
-    control_points::ControlPoints, drawer::Drawer, mesh::Mesh, polygon_filler::PolygonFiller,
+    control_points::ControlPoints, drawer::Drawer, light_source::LightSource, mesh::Mesh,
+    polygon_filler::PolygonFiller,
 };
 
 pub struct TriangleMeshFiller {
     controls_state: ControlsState,
     control_points: ControlPoints,
     mesh: Mesh,
+    light_source: LightSource,
 }
 
 impl TriangleMeshFiller {
@@ -17,10 +20,12 @@ impl TriangleMeshFiller {
         let controls_state = ControlsState::default();
         let control_points = ControlPoints::load_from_file(path)?;
         let mesh = Mesh::triangulation(&control_points, &controls_state);
+        let light_source = LightSource::new(Vector3::new(400.0, 0.0, 400.0), egui::Color32::WHITE);
         Ok(Self {
             control_points,
             mesh,
             controls_state,
+            light_source,
         })
     }
 
@@ -43,7 +48,7 @@ impl TriangleMeshFiller {
                         ui.add(
                             egui::Slider::new(
                                 &mut self.controls_state.triangulation_accuracy,
-                                5..=40,
+                                5..=60,
                             )
                             .text("Triangulation accuracy"),
                         );
@@ -71,7 +76,11 @@ impl TriangleMeshFiller {
                         );
                         ui.add_space(SPACING_X);
                         ui.add(egui::Slider::new(&mut self.controls_state.m, 1..=100).text("m"));
-                    })
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Shape color");
+                        ui.color_edit_button_srgba(&mut self.controls_state.shape_color);
+                    });
                 });
             });
     }
@@ -81,7 +90,15 @@ impl TriangleMeshFiller {
             let painter = ui.painter();
             let screen_center = ui.available_rect_before_wrap().center();
             let drawer = Drawer::new(screen_center, painter);
-            let mut pf = PolygonFiller::new(self.mesh.points(), &drawer);
+            let mut pf = PolygonFiller::new(
+                self.mesh.points(),
+                &drawer,
+                &self.light_source,
+                self.controls_state.shape_color(),
+                self.controls_state.kd(),
+                self.controls_state.ks(),
+                self.controls_state.m(),
+            );
             for triangle in self.mesh.triangles() {
                 pf.fill_polygon(triangle.vertices());
             }
@@ -109,6 +126,7 @@ pub struct ControlsState {
     kd: f32,
     ks: f32,
     m: u8,
+    shape_color: egui::Color32,
 }
 
 impl ControlsState {
@@ -139,6 +157,10 @@ impl ControlsState {
     pub fn m(&self) -> u8 {
         self.m
     }
+
+    pub fn shape_color(&self) -> egui::Color32 {
+        self.shape_color
+    }
 }
 
 impl Default for ControlsState {
@@ -148,9 +170,10 @@ impl Default for ControlsState {
             alfa: 0.0,
             beta: 0.0,
             show_mesh: false,
-            kd: 0.0,
-            ks: 0.0,
-            m: 1,
+            kd: 0.5,
+            ks: 0.5,
+            m: 50,
+            shape_color: egui::Color32::GREEN,
         }
     }
 }
