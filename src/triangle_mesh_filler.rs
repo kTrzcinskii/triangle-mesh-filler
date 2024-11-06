@@ -47,6 +47,7 @@ impl TriangleMeshFiller {
                         egui::Slider::new(&mut self.controls_state.beta, 0.0..=10.0).text("Beta"),
                     );
                 });
+                ui.checkbox(&mut self.controls_state.show_mesh, "Show mesh");
             });
     }
 
@@ -59,8 +60,10 @@ impl TriangleMeshFiller {
             for triangle in self.mesh.triangles() {
                 pf.fill_polygon(triangle.vertices());
             }
-            drawer.draw_control_points(&self.control_points, &self.controls_state);
-            drawer.draw_mesh(&self.mesh);
+            if self.controls_state.show_mesh() {
+                drawer.draw_control_points(&self.control_points, &self.controls_state);
+                drawer.draw_mesh(&self.mesh);
+            }
         });
     }
 }
@@ -77,6 +80,7 @@ pub struct ControlsState {
     triangulation_accuracy: usize,
     alfa: f32,
     beta: f32,
+    show_mesh: bool,
 }
 
 impl ControlsState {
@@ -91,6 +95,10 @@ impl ControlsState {
     pub fn beta(&self) -> f32 {
         self.beta
     }
+
+    pub fn show_mesh(&self) -> bool {
+        self.show_mesh
+    }
 }
 
 impl Default for ControlsState {
@@ -99,6 +107,7 @@ impl Default for ControlsState {
             triangulation_accuracy: 5,
             alfa: 0.0,
             beta: 0.0,
+            show_mesh: false,
         }
     }
 }
