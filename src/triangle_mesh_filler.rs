@@ -2,7 +2,9 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use crate::{control_points::ControlPoints, drawer::Drawer, mesh::Mesh};
+use crate::{
+    control_points::ControlPoints, drawer::Drawer, mesh::Mesh, polygon_filler::PolygonFiller,
+};
 
 pub struct TriangleMeshFiller {
     controls_state: ControlsState,
@@ -38,7 +40,7 @@ impl eframe::App for TriangleMeshFiller {
                 ui.heading("Controls");
                 ui.separator();
                 ui.add(
-                    egui::Slider::new(&mut self.controls_state.triangulation_accuracy, 10..=60)
+                    egui::Slider::new(&mut self.controls_state.triangulation_accuracy, 5..=40)
                         .text("Triangulation accuracy"),
                 );
                 ui.horizontal(|ui| {
@@ -54,6 +56,10 @@ impl eframe::App for TriangleMeshFiller {
         egui::CentralPanel::default().show(ctx, |ui| {
             let painter = ui.painter();
             let screen_center = ui.available_rect_before_wrap().center();
+            let mut pf = PolygonFiller::new(self.mesh.points(), painter, screen_center);
+            for triangle in self.mesh.triangles() {
+                pf.fill_polygon(triangle.vertices());
+            }
             Drawer::draw_control_points(
                 painter,
                 &screen_center,
@@ -88,7 +94,7 @@ impl ControlsState {
 impl Default for ControlsState {
     fn default() -> Self {
         ControlsState {
-            triangulation_accuracy: 20,
+            triangulation_accuracy: 5,
             alfa: 0.0,
             beta: 0.0,
         }

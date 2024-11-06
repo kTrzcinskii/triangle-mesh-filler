@@ -18,6 +18,12 @@ impl Drawer {
         Pos2 { x, y }
     }
 
+    fn pos_to_screen(pos: &Pos2, screen_center: &Pos2) -> Pos2 {
+        let x = screen_center.x + pos.x;
+        let y = screen_center.y - pos.y;
+        Pos2 { x, y }
+    }
+
     // We don't apply rotations to them, so we need to rotate them while drawing
     pub fn draw_control_points(
         painter: &egui::Painter,
@@ -75,5 +81,16 @@ impl Drawer {
                 },
             );
         }
+    }
+
+    pub fn paint_pixel(
+        painter: &egui::Painter,
+        screen_center: &Pos2,
+        position: Pos2,
+        color: Color32,
+    ) {
+        let pos = Self::pos_to_screen(&position, screen_center);
+        let rect = egui::Rect::from_min_size(pos, egui::Vec2::new(1.0, 1.0));
+        painter.rect_filled(rect, 0.0, color);
     }
 }

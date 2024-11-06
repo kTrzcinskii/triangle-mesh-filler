@@ -1,8 +1,4 @@
-#[derive(Clone, Copy)]
-pub struct PosIn2DArr {
-    pub row: usize,
-    pub col: usize,
-}
+use crate::mesh::PosIn2DArr;
 
 pub struct Triangle {
     /// Array of indexes inside list of point in `Mesh`

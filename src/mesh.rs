@@ -4,7 +4,7 @@ use crate::{
     control_points::ControlPoints,
     point::{PData, Point},
     rotations::Rotations,
-    triangle::{PosIn2DArr, Triangle},
+    triangle::Triangle,
     triangle_mesh_filler::ControlsState,
 };
 
@@ -123,6 +123,10 @@ impl Points2DArr {
         &self.data[self.get_index(row, column)]
     }
 
+    pub fn at_pos(&self, pos: PosIn2DArr) -> &Point {
+        self.at(pos.row, pos.col)
+    }
+
     pub fn set_at(&mut self, row: usize, column: usize, point: Point) {
         let id = self.get_index(row, column);
         self.data[id] = point;
@@ -135,4 +139,10 @@ impl Points2DArr {
     pub fn cols(&self) -> usize {
         self.cols
     }
+}
+
+#[derive(Clone, Copy)]
+pub struct PosIn2DArr {
+    pub row: usize,
+    pub col: usize,
 }

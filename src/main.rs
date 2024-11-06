@@ -5,6 +5,7 @@ mod control_points;
 mod drawer;
 mod mesh;
 mod point;
+mod polygon_filler;
 mod rotations;
 mod triangle;
 mod triangle_mesh_filler;

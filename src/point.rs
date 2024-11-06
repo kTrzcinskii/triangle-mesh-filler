@@ -1,6 +1,6 @@
 use nalgebra::{Matrix3, Vector3};
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Point {
     before_rotation: PData,
     after_rotation: PData,
@@ -36,7 +36,7 @@ impl Point {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct PData {
     /// Point
     p: Vector3<f32>,
