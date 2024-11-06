@@ -1,3 +1,5 @@
+use std::env;
+
 use anyhow::{Error, Result};
 use triangle_mesh_filler::TriangleMeshFiller;
 
@@ -12,7 +14,12 @@ mod triangle;
 mod triangle_mesh_filler;
 
 fn main() -> Result<()> {
-    let app = TriangleMeshFiller::load_from_file("config/default_config.txt")?;
+    let args: Vec<_> = env::args().collect();
+    let config_path = args
+        .get(1)
+        .map(|s| s.as_str())
+        .unwrap_or("config/default_config.txt");
+    let app = TriangleMeshFiller::load_from_file(config_path)?;
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_maximized(true),
         ..Default::default()
