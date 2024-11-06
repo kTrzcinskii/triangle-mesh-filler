@@ -171,7 +171,7 @@ impl AET {
             for x in (same_y.x_start as i32)..(same_y.x_end as i32 + 1) {
                 let pos = egui::Pos2 {
                     x: x as f32,
-                    y: y as f32,
+                    y: (y - 1) as f32,
                 };
                 drawer.paint_pixel(pos, egui::Color32::YELLOW);
             }

@@ -30,24 +30,49 @@ impl TriangleMeshFiller {
     }
 
     fn show_controls(&mut self, ctx: &egui::Context) {
+        const SPACING_X: f32 = 30.0;
+        const SPACING_Y: f32 = 25.0;
         egui::SidePanel::right("ControlsPanle")
             .resizable(false)
             .show(ctx, |ui| {
                 ui.heading("Controls");
                 ui.separator();
-                ui.add(
-                    egui::Slider::new(&mut self.controls_state.triangulation_accuracy, 5..=40)
-                        .text("Triangulation accuracy"),
-                );
-                ui.horizontal(|ui| {
-                    ui.add(
-                        egui::Slider::new(&mut self.controls_state.alfa, -45.0..=45.0).text("Alfa"),
-                    );
-                    ui.add(
-                        egui::Slider::new(&mut self.controls_state.beta, 0.0..=10.0).text("Beta"),
-                    );
+                ui.vertical(|ui| {
+                    ui.spacing_mut().item_spacing.y = SPACING_Y;
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::Slider::new(
+                                &mut self.controls_state.triangulation_accuracy,
+                                5..=40,
+                            )
+                            .text("Triangulation accuracy"),
+                        );
+                        ui.add_space(SPACING_X);
+                        ui.checkbox(&mut self.controls_state.show_mesh, "Show mesh");
+                    });
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::Slider::new(&mut self.controls_state.alfa, -45.0..=45.0)
+                                .text("Alfa"),
+                        );
+                        ui.add_space(SPACING_X);
+                        ui.add(
+                            egui::Slider::new(&mut self.controls_state.beta, 0.0..=10.0)
+                                .text("Beta"),
+                        );
+                    });
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::Slider::new(&mut self.controls_state.kd, 0.0..=1.0).text("kd"),
+                        );
+                        ui.add_space(SPACING_X);
+                        ui.add(
+                            egui::Slider::new(&mut self.controls_state.ks, 0.0..=1.0).text("ks"),
+                        );
+                        ui.add_space(SPACING_X);
+                        ui.add(egui::Slider::new(&mut self.controls_state.m, 1..=100).text("m"));
+                    })
                 });
-                ui.checkbox(&mut self.controls_state.show_mesh, "Show mesh");
             });
     }
 
@@ -81,6 +106,9 @@ pub struct ControlsState {
     alfa: f32,
     beta: f32,
     show_mesh: bool,
+    kd: f32,
+    ks: f32,
+    m: u8,
 }
 
 impl ControlsState {
@@ -99,6 +127,18 @@ impl ControlsState {
     pub fn show_mesh(&self) -> bool {
         self.show_mesh
     }
+
+    pub fn kd(&self) -> f32 {
+        self.kd
+    }
+
+    pub fn ks(&self) -> f32 {
+        self.ks
+    }
+
+    pub fn m(&self) -> u8 {
+        self.m
+    }
 }
 
 impl Default for ControlsState {
@@ -108,6 +148,9 @@ impl Default for ControlsState {
             alfa: 0.0,
             beta: 0.0,
             show_mesh: false,
+            kd: 0.0,
+            ks: 0.0,
+            m: 1,
         }
     }
 }
