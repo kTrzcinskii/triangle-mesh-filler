@@ -94,14 +94,8 @@ impl<'p, 'd, 'ep, 'l> PolygonFiller<'p, 'd, 'ep, 'l> {
             x: x as f32,
             y: y as f32,
         };
-        // FIXME: there is something wrong with these cords
         let bar_coords = self.get_barycentric_coords(polygon, Vector2::<f32>::new(pos.x, pos.y));
         let p = self.point_from_barycentric_coords(polygon, bar_coords);
-        // let mut p = (*self.all_points.at_pos(polygon[0]).after_rotation()
-        //     + *self.all_points.at_pos(polygon[1]).after_rotation()
-        //     + *self.all_points.at_pos(polygon[0]).after_rotation())
-        //     * (1.0 / 3.0);
-        // p.normalize_all();
         let color = self.color_in_point(p);
         self.drawer.paint_pixel(pos, color);
     }
@@ -161,7 +155,7 @@ impl<'p, 'd, 'ep, 'l> PolygonFiller<'p, 'd, 'ep, 'l> {
         let v = (d11 * d20 - d01 * d21) / denom;
         let w = (d00 * d21 - d01 * d20) / denom;
         let u = 1.0 - v - w;
-        vec![v, w, u]
+        vec![u, v, w]
     }
 
     fn point_from_barycentric_coords(&self, polygon: &[PosIn2DArr], bars: Vec<f32>) -> PData {
