@@ -4,11 +4,16 @@ use nalgebra::Vector3;
 pub struct LightSource {
     position: Vector3<f32>,
     color: Color32,
+    radius_base: f32,
 }
 
 impl LightSource {
-    pub fn new(position: Vector3<f32>, color: Color32) -> Self {
-        LightSource { position, color }
+    pub fn new(z: f32, color: Color32, radius_base: f32) -> Self {
+        LightSource {
+            position: Vector3::<f32>::new(0.0, 0.0, z),
+            color,
+            radius_base,
+        }
     }
 
     pub fn position(&self) -> Vector3<f32> {
@@ -25,5 +30,16 @@ impl LightSource {
 
     pub fn color_mut(&mut self) -> &mut Color32 {
         &mut self.color
+    }
+
+    pub fn radius_base_mut(&mut self) -> &mut f32 {
+        &mut self.radius_base
+    }
+
+    pub fn update_position(&mut self, t: f32) {
+        let radius = self.radius_base * (t.sin() + 2.0);
+        let x = radius * t.cos();
+        let y = radius * t.sin();
+        self.position = Vector3::<f32>::new(x, y, self.position.z);
     }
 }

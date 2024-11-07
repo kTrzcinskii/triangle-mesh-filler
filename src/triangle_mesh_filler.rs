@@ -1,7 +1,9 @@
-use std::path::Path;
+use std::{
+    path::Path,
+    time::{Duration, Instant},
+};
 
 use anyhow::Result;
-use nalgebra::Vector3;
 
 use crate::{
     control_points::ControlPoints, drawer::Drawer, light_source::LightSource, mesh::Mesh,
@@ -9,20 +11,22 @@ use crate::{
 };
 
 pub struct TriangleMeshFiller {
+    animation_start_time: Instant,
     controls_state: ControlsState,
     control_points: ControlPoints,
     mesh: Mesh,
     light_source: LightSource,
 }
 
+// TODO: add checkbox for stopping animation
 impl TriangleMeshFiller {
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let controls_state = ControlsState::default();
         let control_points = ControlPoints::load_from_file(path)?;
         let mesh = Mesh::triangulation(&control_points, &controls_state);
-        let light_source =
-            LightSource::new(Vector3::new(50.0, 0.0, 400.0), egui::Color32::LIGHT_GREEN);
+        let light_source = LightSource::new(400.0, egui::Color32::LIGHT_GREEN, 100.0);
         Ok(Self {
+            animation_start_time: Instant::now(),
             control_points,
             mesh,
             controls_state,
@@ -98,6 +102,11 @@ impl TriangleMeshFiller {
                             )
                             .text("Light source Z"),
                         );
+                        ui.add_space(SPACING_X);
+                        ui.add(
+                            egui::Slider::new(self.light_source.radius_base_mut(), 50.0..=300.0)
+                                .text("Light source radius base"),
+                        )
                     })
                 });
             });
@@ -133,7 +142,11 @@ impl TriangleMeshFiller {
 
 impl eframe::App for TriangleMeshFiller {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.request_repaint_after(Duration::from_millis(16));
         self.recalculate_mesh();
+        let elapsed = self.animation_start_time.elapsed().as_secs_f32();
+        let t = elapsed * 0.5;
+        self.light_source.update_position(t);
         self.show_controls(ctx);
         self.show_central_panel(ctx);
     }
