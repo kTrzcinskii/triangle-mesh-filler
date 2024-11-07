@@ -15,6 +15,10 @@ impl LightSource {
         self.position
     }
 
+    pub fn position_mut(&mut self) -> &mut Vector3<f32> {
+        &mut self.position
+    }
+
     pub fn color(&self) -> Color32 {
         self.color
     }

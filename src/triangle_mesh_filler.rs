@@ -20,7 +20,8 @@ impl TriangleMeshFiller {
         let controls_state = ControlsState::default();
         let control_points = ControlPoints::load_from_file(path)?;
         let mesh = Mesh::triangulation(&control_points, &controls_state);
-        let light_source = LightSource::new(Vector3::new(400.0, 0.0, 400.0), egui::Color32::WHITE);
+        let light_source =
+            LightSource::new(Vector3::new(50.0, 0.0, 400.0), egui::Color32::LIGHT_GREEN);
         Ok(Self {
             control_points,
             mesh,
@@ -83,7 +84,21 @@ impl TriangleMeshFiller {
                         ui.add_space(SPACING_X);
                         ui.label("Light color");
                         ui.color_edit_button_srgba(self.light_source.color_mut());
+                        ui.add_space(SPACING_X);
+                        ui.checkbox(
+                            &mut self.controls_state.show_light_source,
+                            "Show light source",
+                        );
                     });
+                    ui.horizontal(|ui| {
+                        ui.add(
+                            egui::Slider::new(
+                                &mut self.light_source.position_mut().z,
+                                50.0..=700.0,
+                            )
+                            .text("Light source Z"),
+                        );
+                    })
                 });
             });
     }
@@ -109,6 +124,9 @@ impl TriangleMeshFiller {
                 drawer.draw_control_points(&self.control_points, &self.controls_state);
                 drawer.draw_mesh(&self.mesh);
             }
+            if self.controls_state.show_light_source() {
+                drawer.draw_light_source(&self.light_source);
+            }
         });
     }
 }
@@ -130,6 +148,7 @@ pub struct ControlsState {
     ks: f32,
     m: u8,
     shape_color: egui::Color32,
+    show_light_source: bool,
 }
 
 impl ControlsState {
@@ -164,6 +183,10 @@ impl ControlsState {
     pub fn shape_color(&self) -> egui::Color32 {
         self.shape_color
     }
+
+    pub fn show_light_source(&self) -> bool {
+        self.show_light_source
+    }
 }
 
 impl Default for ControlsState {
@@ -176,7 +199,8 @@ impl Default for ControlsState {
             kd: 0.5,
             ks: 0.5,
             m: 50,
-            shape_color: egui::Color32::GREEN,
+            shape_color: egui::Color32::GRAY,
+            show_light_source: false,
         }
     }
 }

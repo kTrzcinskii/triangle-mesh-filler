@@ -3,6 +3,7 @@ use nalgebra::Vector3;
 
 use crate::{
     control_points::{ControlPoints, CONTROL_POINT_COLS, CONTROL_POINT_ROWS},
+    light_source::LightSource,
     mesh::Mesh,
     point::Points2DArr,
     rotations::Rotations,
@@ -92,5 +93,14 @@ impl<'ep> Drawer<'ep> {
         let pos = self.pos_to_screen(&position);
         let rect = egui::Rect::from_min_size(pos, egui::Vec2::new(1.0, 1.0));
         self.painter.rect_filled(rect, 0.0, color);
+    }
+
+    pub fn draw_light_source(&self, light_source: &LightSource) {
+        const RADIUS: f32 = 15.0;
+        let pos = self.point_to_screen(&light_source.position());
+        self.painter
+            .circle_filled(pos, RADIUS, light_source.color());
+        self.painter
+            .circle_stroke(pos, RADIUS, egui::Stroke::new(2.0, Color32::BLACK));
     }
 }
