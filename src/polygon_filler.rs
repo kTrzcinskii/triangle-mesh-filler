@@ -2,27 +2,28 @@ use egui::{Color32, Pos2};
 use nalgebra::{Vector2, Vector3};
 
 use crate::{
+    colors_manager::ColorsManager,
     drawer::Drawer,
     light_source::LightSource,
-    point::{PData, Points2DArr, PosIn2DArr},
+    point::{PData, Point, Points2DArr, PosIn2DArr},
 };
 
-pub struct PolygonFiller<'p, 'd, 'ep, 'l> {
+pub struct PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
     all_points: &'p Points2DArr,
     drawer: &'d Drawer<'ep>,
     light_source: &'l LightSource,
-    base_color: Color32,
+    colors_manager: ColorsManager<'tl>,
     kd: f32,
     ks: f32,
     m: u8,
 }
 
-impl<'p, 'd, 'ep, 'l> PolygonFiller<'p, 'd, 'ep, 'l> {
+impl<'p, 'd, 'ep, 'l, 'tl> PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
     pub fn new(
         all_points: &'p Points2DArr,
         drawer: &'d Drawer<'ep>,
         light_source: &'l LightSource,
-        base_color: Color32,
+        colors_manager: ColorsManager<'tl>,
         kd: f32,
         ks: f32,
         m: u8,
@@ -31,7 +32,7 @@ impl<'p, 'd, 'ep, 'l> PolygonFiller<'p, 'd, 'ep, 'l> {
             all_points,
             drawer,
             light_source,
-            base_color,
+            colors_manager,
             kd,
             ks,
             m,
@@ -140,7 +141,6 @@ impl<'p, 'd, 'ep, 'l> PolygonFiller<'p, 'd, 'ep, 'l> {
 
     /// Returns vector where i-th element is barycentric coord of i-th point from polygon
     fn get_barycentric_coords(&self, polygon: &[PosIn2DArr], p: Vector2<f32>) -> Vec<f32> {
-        // TODO: for now only works for triangles, maybe should be generalized for every polygon?
         let v0 = self.all_points.at_pos(polygon[1]).after_rotation().p().xy()
             - self.all_points.at_pos(polygon[0]).after_rotation().p().xy();
         let v1 = self.all_points.at_pos(polygon[2]).after_rotation().p().xy()
@@ -158,31 +158,32 @@ impl<'p, 'd, 'ep, 'l> PolygonFiller<'p, 'd, 'ep, 'l> {
         vec![u, v, w]
     }
 
-    fn point_from_barycentric_coords(&self, polygon: &[PosIn2DArr], bars: Vec<f32>) -> PData {
-        let mut p = PData::ZERO;
+    fn point_from_barycentric_coords(&self, polygon: &[PosIn2DArr], bars: Vec<f32>) -> Point {
+        let mut p = Point::ZERO;
         for i in 0..polygon.len() {
-            p += *self.all_points.at_pos(polygon[i]).after_rotation() * bars[i];
+            p += *self.all_points.at_pos(polygon[i]) * bars[i];
         }
         p.normalize_all();
         p
     }
 
-    fn color_in_point(&self, point: PData) -> Color32 {
-        let r = self.base_color.r() as f32 / u8::MAX as f32;
+    fn color_in_point(&self, point: Point) -> Color32 {
+        let base_color = self.colors_manager.get_point_base_color(&point);
+        let r = base_color.r() as f32 / u8::MAX as f32;
         let light_r = self.light_source.color().r() as f32 / u8::MAX as f32;
-        let g = self.base_color.g() as f32 / u8::MAX as f32;
+        let g = base_color.g() as f32 / u8::MAX as f32;
         let light_g = self.light_source.color().g() as f32 / u8::MAX as f32;
-        let b = self.base_color.b() as f32 / u8::MAX as f32;
+        let b = base_color.b() as f32 / u8::MAX as f32;
         let light_b = self.light_source.color().b() as f32 / u8::MAX as f32;
-        let new_r = self.calculate_color_component(point, r, light_r);
-        let new_g = self.calculate_color_component(point, g, light_g);
-        let new_b = self.calculate_color_component(point, b, light_b);
+        let new_r = self.calculate_color_component(point.after_rotation(), r, light_r);
+        let new_g = self.calculate_color_component(point.after_rotation(), g, light_g);
+        let new_b = self.calculate_color_component(point.after_rotation(), b, light_b);
         Color32::from_rgb(new_r, new_g, new_b)
     }
 
     fn calculate_color_component(
         &self,
-        point: PData,
+        point: &PData,
         base_color_component: f32,
         light_color_component: f32,
     ) -> u8 {

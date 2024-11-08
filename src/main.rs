@@ -3,6 +3,7 @@ use std::env;
 use anyhow::{Error, Result};
 use triangle_mesh_filler::TriangleMeshFiller;
 
+mod colors_manager;
 mod control_points;
 mod drawer;
 mod light_source;
@@ -10,6 +11,7 @@ mod mesh;
 mod point;
 mod polygon_filler;
 mod rotations;
+mod texture_loader;
 mod triangle;
 mod triangle_mesh_filler;
 

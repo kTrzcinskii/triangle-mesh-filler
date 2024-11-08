@@ -4,10 +4,12 @@ use std::{
 };
 
 use anyhow::Result;
+use rfd::FileDialog;
 
 use crate::{
-    control_points::ControlPoints, drawer::Drawer, light_source::LightSource, mesh::Mesh,
-    polygon_filler::PolygonFiller,
+    colors_manager::ColorsManager, control_points::ControlPoints, drawer::Drawer,
+    light_source::LightSource, mesh::Mesh, polygon_filler::PolygonFiller,
+    texture_loader::TextureLoader,
 };
 
 pub struct TriangleMeshFiller {
@@ -16,6 +18,7 @@ pub struct TriangleMeshFiller {
     control_points: ControlPoints,
     mesh: Mesh,
     light_source: LightSource,
+    texture_loader: TextureLoader,
 }
 
 // TODO: add checkbox for stopping animation
@@ -25,12 +28,14 @@ impl TriangleMeshFiller {
         let control_points = ControlPoints::load_from_file(path)?;
         let mesh = Mesh::triangulation(&control_points, &controls_state);
         let light_source = LightSource::new(400.0, egui::Color32::LIGHT_GREEN, 100.0);
+        let texture_loader = TextureLoader::new();
         Ok(Self {
             animation_start_time: Instant::now(),
             control_points,
             mesh,
             controls_state,
             light_source,
+            texture_loader,
         })
     }
 
@@ -82,10 +87,34 @@ impl TriangleMeshFiller {
                         ui.add_space(SPACING_X);
                         ui.add(egui::Slider::new(&mut self.controls_state.m, 1..=100).text("m"));
                     });
+                    ui.vertical(|ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Shape color");
+                            ui.color_edit_button_srgba(&mut self.controls_state.shape_color);
+                            ui.add_space(SPACING_X);
+                            match self.texture_loader.has_texture() {
+                                true => {
+                                    if ui.button("Remove texture").clicked() {
+                                        self.texture_loader.remove_texture();
+                                    }
+                                }
+                                false => {
+                                    if ui.button("Load Texture").clicked() {
+                                        if let Some(path) = FileDialog::new()
+                                            .add_filter("Texture", &["png", "jpg", "jpeg"])
+                                            .pick_file()
+                                        {
+                                            self.texture_loader
+                                                .load_texture_from_file(path)
+                                                .expect("Should properly load texture");
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        ui.label("Texture always take precedence over color. To use shape color texture must be removed.");
+                    });
                     ui.horizontal(|ui| {
-                        ui.label("Shape color");
-                        ui.color_edit_button_srgba(&mut self.controls_state.shape_color);
-                        ui.add_space(SPACING_X);
                         ui.label("Light color");
                         ui.color_edit_button_srgba(self.light_source.color_mut());
                         ui.add_space(SPACING_X);
@@ -121,7 +150,7 @@ impl TriangleMeshFiller {
                 self.mesh.points(),
                 &drawer,
                 &self.light_source,
-                self.controls_state.shape_color(),
+                ColorsManager::new(self.controls_state.shape_color(), &self.texture_loader),
                 self.controls_state.kd(),
                 self.controls_state.ks(),
                 self.controls_state.m(),

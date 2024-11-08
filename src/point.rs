@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul};
+use std::ops::{AddAssign, Mul};
 
 use nalgebra::{Matrix3, Vector3};
 
@@ -102,6 +102,33 @@ impl Point {
         self.after_rotation = PData::new(p, pu, pv, n);
         self.after_rotation.normalize_all();
     }
+
+    pub fn normalize_all(&mut self) {
+        self.before_rotation.normalize_all();
+        self.after_rotation.normalize_all();
+    }
+}
+
+impl Mul<f32> for Point {
+    type Output = Point;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Point {
+            after_rotation: self.after_rotation * rhs,
+            before_rotation: self.before_rotation * rhs,
+            u: self.u * rhs,
+            v: self.v * rhs,
+        }
+    }
+}
+
+impl AddAssign<Point> for Point {
+    fn add_assign(&mut self, rhs: Point) {
+        self.after_rotation += rhs.after_rotation;
+        self.before_rotation += rhs.before_rotation;
+        self.u += rhs.u;
+        self.v += rhs.v;
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -148,19 +175,6 @@ impl PData {
         self.pu = self.pu.normalize();
         self.pv = self.pv.normalize();
         self.n = self.n.normalize();
-    }
-}
-
-impl Add<PData> for PData {
-    type Output = PData;
-
-    fn add(self, rhs: PData) -> Self::Output {
-        PData {
-            p: self.p + rhs.p,
-            pu: self.pu + rhs.pu,
-            pv: self.pv + rhs.pv,
-            n: self.n + rhs.n,
-        }
     }
 }
 
