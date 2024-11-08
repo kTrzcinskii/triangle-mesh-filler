@@ -21,7 +21,6 @@ pub struct TriangleMeshFiller {
     texture_loader: TextureLoader,
 }
 
-// TODO: add checkbox for stopping animation
 impl TriangleMeshFiller {
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let controls_state = ControlsState::default();
@@ -88,6 +87,7 @@ impl TriangleMeshFiller {
                         ui.add(egui::Slider::new(&mut self.controls_state.m, 1..=100).text("m"));
                     });
                     ui.vertical(|ui| {
+                        ui.label("Texture always take precedence over color. To use shape color texture must be removed.");
                         ui.horizontal(|ui| {
                             ui.label("Shape color");
                             ui.color_edit_button_srgba(&mut self.controls_state.shape_color);
@@ -112,18 +112,11 @@ impl TriangleMeshFiller {
                                 }
                             }
                         });
-                        ui.label("Texture always take precedence over color. To use shape color texture must be removed.");
                     });
                     ui.horizontal(|ui| {
                         ui.label("Light color");
                         ui.color_edit_button_srgba(self.light_source.color_mut());
                         ui.add_space(SPACING_X);
-                        ui.checkbox(
-                            &mut self.controls_state.show_light_source,
-                            "Show light source",
-                        );
-                    });
-                    ui.horizontal(|ui| {
                         ui.add(
                             egui::Slider::new(
                                 &mut self.light_source.position_mut().z,
@@ -132,10 +125,18 @@ impl TriangleMeshFiller {
                             .text("Light source Z"),
                         );
                         ui.add_space(SPACING_X);
+                        ui.checkbox(
+                            &mut self.controls_state.show_light_source,
+                            "Show light source",
+                        );
+                    });
+                    ui.horizontal(|ui| {
                         ui.add(
                             egui::Slider::new(self.light_source.radius_base_mut(), 50.0..=300.0)
                                 .text("Light source radius base"),
-                        )
+                        );
+                        ui.add_space(SPACING_X);
+                        ui.checkbox(&mut self.controls_state.run_animation, "Run animation");
                     })
                 });
             });
@@ -171,11 +172,13 @@ impl TriangleMeshFiller {
 
 impl eframe::App for TriangleMeshFiller {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.request_repaint_after(Duration::from_millis(16));
         self.recalculate_mesh();
-        let elapsed = self.animation_start_time.elapsed().as_secs_f32();
-        let t = elapsed * 0.5;
-        self.light_source.update_position(t);
+        if self.controls_state.run_animation() {
+            ctx.request_repaint_after(Duration::from_millis(16));
+            let elapsed = self.animation_start_time.elapsed().as_secs_f32();
+            let t = elapsed * 0.5;
+            self.light_source.update_position(t);
+        }
         self.show_controls(ctx);
         self.show_central_panel(ctx);
     }
@@ -191,6 +194,7 @@ pub struct ControlsState {
     m: u8,
     shape_color: egui::Color32,
     show_light_source: bool,
+    run_animation: bool,
 }
 
 impl ControlsState {
@@ -229,6 +233,10 @@ impl ControlsState {
     pub fn show_light_source(&self) -> bool {
         self.show_light_source
     }
+
+    pub fn run_animation(&self) -> bool {
+        self.run_animation
+    }
 }
 
 impl Default for ControlsState {
@@ -243,6 +251,7 @@ impl Default for ControlsState {
             m: 50,
             shape_color: egui::Color32::GRAY,
             show_light_source: false,
+            run_animation: true,
         }
     }
 }
