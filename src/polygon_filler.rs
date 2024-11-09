@@ -42,22 +42,26 @@ impl<'p, 'd, 'ep, 'l, 'tl> PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
     pub fn fill_polygon(&mut self, polygon: &[PosIn2DArr]) {
         let mut aet = AET::new();
         let sorted_indicies = self.get_vertices_sorted_indicies(polygon);
-        let y_min = self.get_point_at_index(polygon, &sorted_indicies, 0).y;
+        let y_min = self
+            .get_point_at_index(polygon, &sorted_indicies, 0)
+            .y
+            .round() as i32;
         let y_max = self
             .get_point_at_index(polygon, &sorted_indicies, sorted_indicies.len() - 1)
-            .y;
-        let mut y = y_min as i32;
+            .y
+            .round() as i32;
+        let mut y = y_min;
 
-        while y <= y_max as i32 {
+        while y <= y_max {
             for i in 0..sorted_indicies.len() {
                 let p_index = sorted_indicies[i];
                 let p = self.get_point_at_index(polygon, &sorted_indicies, i);
 
                 // Sorted_indicies are sorted by y so we can break like this
-                if p.y as i32 >= y {
+                if p.y.round() as i32 >= y {
                     break;
                 }
-                if p.y as i32 != y - 1 {
+                if p.y.round() as i32 != y - 1 {
                     continue;
                 }
                 // At this point we know p was on previous scan line
@@ -223,7 +227,7 @@ impl AET {
     }
 
     fn add_edge(&mut self, start: Vector3<f32>, end: Vector3<f32>, start_id: usize, end_id: usize) {
-        let (start_y, end_y) = (start.y as i32, end.y as i32);
+        let (start_y, end_y) = (start.y.round() as i32, end.y.round() as i32);
         if start_y == end_y {
             self.same_y.push(SameY {
                 x_start: start.x.min(end.x),
@@ -272,7 +276,7 @@ impl AET {
         F: Fn(i32, i32),
     {
         for same_y in self.same_y.iter() {
-            for x in (same_y.x_start as i32)..(same_y.x_end as i32 + 1) {
+            for x in (same_y.x_start.round() as i32)..(same_y.x_end.round() as i32 + 1) {
                 pixel_callback(x, y - 1);
             }
         }
@@ -284,7 +288,7 @@ impl AET {
             let next = i + 1;
             let start = self.data[i].x;
             let end = self.data[next].x;
-            for x in (start as i32)..(end as i32 + 1) {
+            for x in (start.round() as i32)..(end.round() as i32 + 1) {
                 pixel_callback(x, y);
             }
         }
