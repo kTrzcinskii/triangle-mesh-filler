@@ -3,6 +3,7 @@ use std::path::Path;
 use anyhow::{Error, Result};
 use egui::{Color32, ColorImage};
 use image::ImageReader;
+use nalgebra::Vector3;
 
 use crate::point::Point;
 
@@ -47,5 +48,19 @@ impl TextureLoader {
                 texture.pixels[y * width as usize + x]
             })
             .ok_or(Error::msg("Missing texture"))
+    }
+
+    pub fn get_n_in_point(&self, point: &Point) -> Result<Vector3<f32>> {
+        let color = self.get_color_in_point(point)?;
+        Ok(Vector3::<f32>::new(
+            self.scale_rgb(color.r()),
+            self.scale_rgb(color.g()),
+            self.scale_rgb(color.b()),
+        )
+        .normalize())
+    }
+
+    pub fn scale_rgb(&self, component: u8) -> f32 {
+        component as f32 / (u8::MAX as f32) * 2.0 - 1.0
     }
 }

@@ -19,6 +19,7 @@ pub struct TriangleMeshFiller {
     mesh: Mesh,
     light_source: LightSource,
     texture_loader: TextureLoader,
+    normal_map_loader: TextureLoader,
 }
 
 impl TriangleMeshFiller {
@@ -28,6 +29,7 @@ impl TriangleMeshFiller {
         let mesh = Mesh::triangulation(&control_points, &controls_state);
         let light_source = LightSource::new(400.0, egui::Color32::LIGHT_GREEN, 100.0);
         let texture_loader = TextureLoader::new();
+        let normal_map_loader = TextureLoader::new();
         Ok(Self {
             animation_start_time: Instant::now(),
             control_points,
@@ -35,6 +37,7 @@ impl TriangleMeshFiller {
             controls_state,
             light_source,
             texture_loader,
+            normal_map_loader,
         })
     }
 
@@ -111,6 +114,28 @@ impl TriangleMeshFiller {
                                     }
                                 }
                             }
+                            ui.add_space(SPACING_X);
+                            match self.normal_map_loader.has_texture() {
+                                true => {
+                                    if ui.button("Remove normal map").clicked() {
+                                        self.normal_map_loader.remove_texture();
+                                    }
+                                }
+                                false => {
+                                    if ui.button("Load normal map").clicked() {
+                                        if let Some(path) = FileDialog::new()
+                                            .add_filter("Normal map", &["png", "jpg", "jpeg"])
+                                            .pick_file()
+                                        {
+                                            self.normal_map_loader
+                                                .load_texture_from_file(path)
+                                                .expect("Should properly load normal map");
+                                        }
+                                    }
+                                }
+                            }
+                            ui.add_space(SPACING_X);
+                            ui.add_enabled(self.normal_map_loader.has_texture(), egui::Checkbox::new(&mut self.controls_state.use_normal_map, "Use texture normal map"));
                         });
                     });
                     ui.horizontal(|ui| {
@@ -151,10 +176,15 @@ impl TriangleMeshFiller {
                 self.mesh.points(),
                 &drawer,
                 &self.light_source,
-                ColorsManager::new(self.controls_state.shape_color(), &self.texture_loader),
+                ColorsManager::new(
+                    self.controls_state.shape_color(),
+                    &self.texture_loader,
+                    &self.normal_map_loader,
+                ),
                 self.controls_state.kd(),
                 self.controls_state.ks(),
                 self.controls_state.m(),
+                self.controls_state.use_normal_map(),
             );
             for triangle in self.mesh.triangles() {
                 pf.fill_polygon(triangle.vertices());
@@ -195,6 +225,7 @@ pub struct ControlsState {
     shape_color: egui::Color32,
     show_light_source: bool,
     run_animation: bool,
+    use_normal_map: bool,
 }
 
 impl ControlsState {
@@ -237,6 +268,10 @@ impl ControlsState {
     pub fn run_animation(&self) -> bool {
         self.run_animation
     }
+
+    pub fn use_normal_map(&self) -> bool {
+        self.use_normal_map
+    }
 }
 
 impl Default for ControlsState {
@@ -252,6 +287,7 @@ impl Default for ControlsState {
             shape_color: egui::Color32::GRAY,
             show_light_source: false,
             run_animation: true,
+            use_normal_map: false,
         }
     }
 }

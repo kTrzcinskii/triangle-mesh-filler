@@ -5,28 +5,31 @@ use crate::{
     colors_manager::ColorsManager,
     drawer::Drawer,
     light_source::LightSource,
-    point::{PData, Point, Points2DArr, PosIn2DArr},
+    point::{Point, Points2DArr, PosIn2DArr},
 };
 
-pub struct PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
+pub struct PolygonFiller<'p, 'd, 'ep, 'l, 'tl, 'nm> {
     all_points: &'p Points2DArr,
     drawer: &'d Drawer<'ep>,
     light_source: &'l LightSource,
-    colors_manager: ColorsManager<'tl>,
+    colors_manager: ColorsManager<'tl, 'nm>,
     kd: f32,
     ks: f32,
     m: u8,
+    use_normal_map: bool,
 }
 
-impl<'p, 'd, 'ep, 'l, 'tl> PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
+impl<'p, 'd, 'ep, 'l, 'tl, 'nm> PolygonFiller<'p, 'd, 'ep, 'l, 'tl, 'nm> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         all_points: &'p Points2DArr,
         drawer: &'d Drawer<'ep>,
         light_source: &'l LightSource,
-        colors_manager: ColorsManager<'tl>,
+        colors_manager: ColorsManager<'tl, 'nm>,
         kd: f32,
         ks: f32,
         m: u8,
+        use_normal_map: bool,
     ) -> Self {
         Self {
             all_points,
@@ -36,6 +39,7 @@ impl<'p, 'd, 'ep, 'l, 'tl> PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
             kd,
             ks,
             m,
+            use_normal_map,
         }
     }
 
@@ -179,26 +183,30 @@ impl<'p, 'd, 'ep, 'l, 'tl> PolygonFiller<'p, 'd, 'ep, 'l, 'tl> {
         let light_g = self.light_source.color().g() as f32 / u8::MAX as f32;
         let b = base_color.b() as f32 / u8::MAX as f32;
         let light_b = self.light_source.color().b() as f32 / u8::MAX as f32;
-        let new_r = self.calculate_color_component(point.after_rotation(), r, light_r);
-        let new_g = self.calculate_color_component(point.after_rotation(), g, light_g);
-        let new_b = self.calculate_color_component(point.after_rotation(), b, light_b);
+        let new_r = self.calculate_color_component(&point, r, light_r);
+        let new_g = self.calculate_color_component(&point, g, light_g);
+        let new_b = self.calculate_color_component(&point, b, light_b);
         Color32::from_rgb(new_r, new_g, new_b)
     }
 
     fn calculate_color_component(
         &self,
-        point: &PData,
+        point: &Point,
         base_color_component: f32,
         light_color_component: f32,
     ) -> u8 {
-        let l = (self.light_source.position() - point.p()).normalize();
-        let mut cos_n_l = point.n().dot(&l);
+        let point_data = point.after_rotation();
+        let n = self
+            .colors_manager
+            .get_point_n_vector(point, self.use_normal_map);
+        let l = (self.light_source.position() - point_data.p()).normalize();
+        let mut cos_n_l = n.dot(&l);
         if cos_n_l < 0.0 {
             cos_n_l = 0.0;
         }
         let lhs = self.kd * light_color_component * base_color_component * cos_n_l;
         let v = Vector3::<f32>::new(0.0, 0.0, 1.0);
-        let r = 2.0 * cos_n_l * point.n() - l;
+        let r = 2.0 * cos_n_l * n - l;
         let mut cos_m_v_r = v.dot(&r).powi(self.m as i32);
         if cos_m_v_r < 0.0 {
             cos_m_v_r = 0.0;

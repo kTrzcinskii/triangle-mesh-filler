@@ -176,6 +176,11 @@ impl PData {
         self.pv = self.pv.normalize();
         self.n = self.n.normalize();
     }
+
+    pub fn n_with_normal_map(&self, normal_map_n: Vector3<f32>) -> Vector3<f32> {
+        let m = Matrix3::from_columns(&[self.pu(), self.pv(), self.n()]);
+        (m * normal_map_n).normalize()
+    }
 }
 
 impl AddAssign<PData> for PData {
