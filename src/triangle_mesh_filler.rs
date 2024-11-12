@@ -1,5 +1,6 @@
 use std::{
     path::Path,
+    thread,
     time::{Duration, Instant},
 };
 
@@ -172,7 +173,7 @@ impl TriangleMeshFiller {
             let painter = ui.painter();
             let screen_center = ui.available_rect_before_wrap().center();
             let drawer = Drawer::new(screen_center, painter);
-            let mut pf = PolygonFiller::new(
+            let pf = PolygonFiller::new(
                 self.mesh.points(),
                 &drawer,
                 &self.light_source,
@@ -186,9 +187,16 @@ impl TriangleMeshFiller {
                 self.controls_state.m(),
                 self.controls_state.use_normal_map(),
             );
-            for triangle in self.mesh.triangles() {
-                pf.fill_polygon(triangle.vertices());
-            }
+
+            thread::scope(|s| {
+                for triangle in self.mesh.triangles() {
+                    let mut pf_clone = pf.clone();
+                    s.spawn(move || {
+                        pf_clone.fill_polygon(triangle.vertices());
+                    });
+                }
+            });
+
             if self.controls_state.show_mesh() {
                 drawer.draw_control_points(&self.control_points, &self.controls_state);
                 drawer.draw_mesh(&self.mesh);

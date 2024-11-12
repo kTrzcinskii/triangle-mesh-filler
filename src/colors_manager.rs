@@ -4,6 +4,7 @@ use nalgebra::Vector3;
 
 use crate::{point::Point, texture_loader::TextureLoader};
 
+#[derive(Clone)]
 pub struct ColorsManager<'tl, 'nm> {
     base_color: Color32,
     texture_loader: &'tl TextureLoader,

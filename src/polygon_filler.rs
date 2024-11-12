@@ -8,6 +8,7 @@ use crate::{
     point::{Point, Points2DArr, PosIn2DArr},
 };
 
+#[derive(Clone)]
 pub struct PolygonFiller<'p, 'd, 'ep, 'l, 'tl, 'nm> {
     all_points: &'p Points2DArr,
     drawer: &'d Drawer<'ep>,
