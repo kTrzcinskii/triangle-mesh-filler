@@ -159,7 +159,7 @@ impl TriangleMeshFiller {
                     ui.horizontal(|ui| {
                         ui.add(
                             egui::Slider::new(self.light_source.radius_base_mut(), 50.0..=300.0)
-                                .text("Light source radius base"),
+                                .text("Light source radius"),
                         );
                         ui.add_space(SPACING_X);
                         ui.checkbox(&mut self.controls_state.run_animation, "Run animation");

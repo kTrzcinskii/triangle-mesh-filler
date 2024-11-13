@@ -37,7 +37,7 @@ impl LightSource {
     }
 
     pub fn update_position(&mut self, t: f32) {
-        let radius = self.radius_base * (t.sin() + 2.0);
+        let radius = self.radius_base;
         let x = radius * t.cos();
         let y = radius * t.sin();
         self.position = Vector3::<f32>::new(x, y, self.position.z);
