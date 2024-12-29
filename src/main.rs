@@ -30,10 +30,7 @@ fn main() -> Result<()> {
         "Triangle Mesh Filler",
         native_options,
         Box::new(|cc| {
-            let style = egui::Style {
-                visuals: egui::Visuals::light(),
-                ..Default::default()
-            };
+            let style = egui::Style::default();
             cc.egui_ctx.set_style(style);
             Ok(Box::new(app))
         }),

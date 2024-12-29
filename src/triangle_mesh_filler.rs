@@ -1,10 +1,10 @@
 use std::{
     path::Path,
-    thread,
     time::{Duration, Instant},
 };
 
 use anyhow::Result;
+use rayon::prelude::*;
 use rfd::FileDialog;
 
 use crate::{
@@ -188,13 +188,11 @@ impl TriangleMeshFiller {
                 self.controls_state.use_normal_map(),
             );
 
-            thread::scope(|s| {
-                for triangle in self.mesh.triangles() {
+            self.mesh.triangles().par_chunks(512).for_each(|chunk| {
+                chunk.iter().for_each(|triangle| {
                     let mut pf_clone = pf.clone();
-                    s.spawn(move || {
-                        pf_clone.fill_polygon(triangle.vertices());
-                    });
-                }
+                    pf_clone.fill_polygon(triangle.vertices());
+                });
             });
 
             if self.controls_state.show_mesh() {

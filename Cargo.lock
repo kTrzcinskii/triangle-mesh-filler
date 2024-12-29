@@ -3356,6 +3356,7 @@ dependencies = [
  "egui",
  "image",
  "nalgebra",
+ "rayon",
  "rfd",
 ]
 
