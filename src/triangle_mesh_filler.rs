@@ -16,6 +16,8 @@ use crate::{
 pub struct TriangleMeshFiller {
     animation_start_time: Instant,
     controls_state: ControlsState,
+    previous_controls_state: ControlsState,
+    need_mesh_recalculation: bool,
     control_points: ControlPoints,
     mesh: Mesh,
     light_source: LightSource,
@@ -35,16 +37,21 @@ impl TriangleMeshFiller {
             animation_start_time: Instant::now(),
             control_points,
             mesh,
+            previous_controls_state: controls_state,
             controls_state,
             light_source,
             texture_loader,
             normal_map_loader,
+            need_mesh_recalculation: true,
         })
     }
 
     fn recalculate_mesh(&mut self) {
-        let new_mesh = Mesh::triangulation(&self.control_points, &self.controls_state);
-        self.mesh = new_mesh;
+        if self.need_mesh_recalculation {
+            let new_mesh = Mesh::triangulation(&self.control_points, &self.controls_state);
+            self.mesh = new_mesh;
+            self.need_mesh_recalculation = false;
+        }
     }
 
     fn show_controls(&mut self, ctx: &egui::Context) {
@@ -166,6 +173,12 @@ impl TriangleMeshFiller {
                     })
                 });
             });
+
+        let values_changed = self.controls_state != self.previous_controls_state;
+        if values_changed {
+            self.need_mesh_recalculation = true;
+            self.previous_controls_state = self.controls_state;
+        }
     }
 
     fn show_central_panel(&self, ctx: &egui::Context) {
@@ -220,6 +233,7 @@ impl eframe::App for TriangleMeshFiller {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct ControlsState {
     triangulation_accuracy: usize,
     alfa: f32,
